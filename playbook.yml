@@ -88,6 +88,16 @@
     - python3-psycopg2
   - name: Ensure the PostgreSQL service is running
     service: name=postgresql state=started enabled=yes
+  - name: add to conf file
+    blockinfile:
+      path: "/etc/postgresql/14/main/postgresql.conf"
+      block: |
+        listen_addresses = '*'
+  - name: Configuring ph_hba.conf
+    blockinfile:
+      path: "/etc/postgresql/14/main/pg_hba.conf"
+      block: |
+        host all all all md5
   - name: rm
     command: rm -rf /var/lib/postgresql/14/
   - name: pg_basebackup
