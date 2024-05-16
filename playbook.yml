@@ -128,8 +128,9 @@
         state: present
     - name: Clone the repository
       git:
-        repo: https://github.com/e1essar/bot.git
+        repo: https://github.com/e1essar/DevOps_PT.git
         dest: /devops_pt/ansible/bot
+        version: main
         force: yes
     - name: Create logfile.txt
       file:
