@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS email_addresses(
 
 -- Create the "phone_numbers" table if not exists
 CREATE TABLE IF NOT EXISTS phone_numbers(
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     phone_number VARCHAR(255) NOT NULL
 );
 
