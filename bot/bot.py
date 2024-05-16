@@ -40,6 +40,7 @@ def find_emailCommand(update: Update, context):
 
 def find_email(update: Update, context):
     user_input = update.message.text
+    update.message.reply_text("Hello")
 
     email_regex = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
     email_list = email_regex.findall(user_input)
@@ -390,23 +391,30 @@ def get_repl_logs (update: Update, context):
     host = os.getenv("DB_HOST")
     port = os.getenv("DB_PORT")
     database = os.getenv("DB_DATABASE")
-
     try:
-        connection = psycopg2.connect(user=user,
-                                password=password,
-                                host=host,
-                                port=port,
-                                database=database)
+        connection = psycopg2.connect(
+            user=user,
+            password=password,
+            host=host,
+            port=port,
+            database=database
+        )
 
         cursor = connection.cursor()
-        cursor.execute("SELECT pg_read_file('/var/log/postgresql/logfile.log') LIMIT 1;")
-        data = cursor.fetchall() 
-        update.message.reply_text(str(data))
+        query = """
+        SELECT pg_read_file('/var/log/postgresql/logfile.log') AS logfile;
+        """
+        cursor.execute(query)
+        file_content = cursor.fetchone()[0]
 
+        max_lines = 10
+        lines_with_replication = file_content.split('\n')[-max_lines:]
+        lines_with_replication = [line for line in lines_with_replication if 'replication' in line]
+
+        update.message.reply_text("\n".join(lines_with_replication))
     except (Exception, Error) as error:
         logging.error("Error in PostgreSQL: %s", error)
         update.message.reply_text(f'Произошла ошибка{error}') # Отправляем сообщение пользователю
-
     finally:
         if connection is not None:
             cursor.close()
@@ -415,15 +423,11 @@ def get_repl_logs (update: Update, context):
     return ConversationHandler.END
 
 def get_email (update: Update, context):
-    
     user = os.getenv("DB_USER")
     password = os.getenv("DB_PASSWORD")
     host = os.getenv("DB_HOST")
     port = os.getenv("DB_PORT")
     database = os.getenv("DB_DATABASE")
-    update.message.reply_text(database)
-    update.message.reply_text("Hello")
-
     try:
         connection = psycopg2.connect(
             user=user,
