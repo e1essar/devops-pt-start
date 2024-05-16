@@ -1,0 +1,174 @@
+- name: Deploy database and set up replication
+  hosts: host01
+  vars:
+    db_user: postgres
+    db_name: db_bot
+    db_password: postgres
+  gather_facts: false
+  become: true
+  tasks:
+  - name: Install dependencies for PostgreSQL
+    apt: name={{ item }} update_cache=yes state=latest
+    with_items:
+    - bash
+    - openssl
+    - libssl-dev
+    - libssl-doc
+  - name: Install PostgreSQL
+    apt: name={{ item }} update_cache=yes state=present
+    with_items:
+    - postgresql
+    - postgresql-contrib
+    - libpq-dev
+    - python3-psycopg2
+  - name: Ensure the PostgreSQL service is running
+    service: name=postgresql state=started enabled=yes
+  - name: Create directory for dump.sql
+    file:
+      path: /devops_pt/ansible/tmp
+      state: directory
+    become: yes
+  - name: Copy dump.sql to remote host
+    copy:
+      src: dump.sql
+      dest: /devops_pt/ansible/tmp/dump.sql
+      force: yes
+  - name: Restart Postgresql
+    service:
+      name: postgresql
+      state: restarted
+  - name: Configuring DUMP.SQL
+    command: psql -a -f /devops_pt/ansible/tmp/dump.sql
+    become: true
+    become_user: postgres
+  - name: add to conf file
+    blockinfile:
+      path: "/etc/postgresql/14/main/postgresql.conf"
+      block: |
+        listen_addresses = '*'
+        wal_level = replica
+        hot_standby = on
+        max_wal_senders = 10
+        max_replication_slots = 10
+        hot_standby_feedback = on
+        log_replication_commands = on
+        logging_collector = on
+        log_directory = '/var/log/postgresql'
+        log_destination = 'stderr'
+        log_filename = 'logfile.log'
+  - name: Configuring ph_hba.conf
+    blockinfile:
+      path: "/etc/postgresql/14/main/pg_hba.conf"
+      block: |
+        host replication all {{ hostvars[inventory_hostname]['DB_REPL_HOST'] }}/24 scram-sha-256
+        host all all all md5
+  - name: Restart Postgresql
+    service:
+      name: postgresql
+      state: restarted
+
+- name: Replica configuration
+  hosts: host02
+  gather_facts: false
+  become: true
+  tasks:
+  - name: Install dependencies for PostgreSQL
+    apt: name={{ item }} update_cache=yes state=latest
+    with_items:
+    - bash
+    - openssl
+    - libssl-dev
+    - libssl-doc
+  - name: Install PostgreSQL
+    apt: name={{ item }} update_cache=yes state=present
+    with_items:
+    - postgresql
+    - postgresql-contrib
+    - libpq-dev
+    - python3-psycopg2
+  - name: Ensure the PostgreSQL service is running
+    service: name=postgresql state=started enabled=yes
+  - name: rm
+    command: rm -rf /var/lib/postgresql/14/
+  - name: pg_basebackup
+    command: >
+        pg_basebackup
+        -h {{ hostvars[inventory_hostname]['DB_HOST'] }}
+        -D /var/lib/postgresql/14/main
+        -U {{ hostvars[inventory_hostname]['DB_REPL_USER'] }}
+        -vP
+        -w
+    environment:
+      PGPASSWORD: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
+  - name: chown
+    command: chown -R postgres:postgres /var/lib/postgresql/
+  - name: restart postgresql
+    service:
+      name: postgresql
+      state: restarted
+
+- name: Deploy telegram bot
+  hosts: host01
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Ensure git is installed
+      apt:
+        name: git
+        state: present
+    - name: Clone the repository
+      git:
+        repo: https://github.com/e1essar/bot.git
+        dest: /devops_pt/ansible/bot
+        force: yes
+    - name: Create logfile.txt
+      file:
+        path: "/devops_pt/ansible/bot/logfile.txt"
+        state: touch
+        mode: '0666'
+      become: true
+    - name: Install Python 3 and pip
+      apt:
+        name:
+        - python3
+        - python3-pip
+        - libpq-dev
+        state: present
+    - name: Install required Python packages
+      pip:
+        requirements: "/ubuntu/ansible/bot/requirements.txt"
+    - name: Copy .env file
+      template:
+        src: .env
+        dest: /devops_pt/ansible/bot/.env
+      become: yes
+    - name: Create systemd service
+      copy:
+        dest: /etc/systemd/system/bot.service
+        content: |
+          [Unit]
+          Description=Telegram Bot Service
+          After=network.target
+
+          [Service]
+          User={{ hostvars[inventory_hostname]['RM_HOST_USER'] }}
+          WorkingDirectory=/devops_pt/ansible/bot
+          ExecStart=/usr/bin/python3 /devops_pt/ansible/bot/bot.py
+          Restart=always
+          StandardOutput=file:/var/log/bot_service.log
+          StandardError=file:/var/log/bot_service.err.log
+
+          [Install]
+          WantedBy=multi-user.target
+      become: true
+
+    - name: Reload systemd
+      command: systemctl daemon-reload
+      become: true
+
+    - name: Start the bot service
+      systemd:
+       name: bot
+       enabled: true
+       state: started
+      become: true

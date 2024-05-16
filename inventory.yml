@@ -1,0 +1,18 @@
+all:
+  vars:
+    RM_HOST_USER: ubuntu
+    DB_REPL_USER: repluser
+    DB_REPL_PASSWORD: replpass
+    DB_HOST: 192.168.31.126
+    DB_REPL_HOST: 192.168.31.147
+  hosts:
+    host01:
+      ansible_host: 192.168.31.126
+      ansible_user: ubuntu
+      ansible_become_pass: ubuntu
+      ansible_ssh_pass: ubuntu
+    host02:
+      ansible_host: 192.168.31.147
+      ansible_user: ubuntu
+      ansible_become_pass: ubuntu
+      ansible_ssh_pass: ubuntu
