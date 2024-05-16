@@ -558,7 +558,7 @@ def save_phone_number (update: Update, context):
                 update.message.reply_text("Номера телефонов успешно добавлены в базу данных.")
             except (Exception, psycopg2.Error) as error:
                 logging.error("Error in PostgreSQL: %s", error)
-                update.message.reply_text("Произошла ошибка при добавлении номеров телефонов в базу данных.")
+                update.message.reply_text(f"Произошла ошибка при добавлении номеров телефонов в базу данных.{error}")
             finally:
                 if connection is not None:
                     cursor.close()
