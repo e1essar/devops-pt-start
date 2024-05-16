@@ -136,7 +136,7 @@
         state: present
     - name: Install required Python packages
       pip:
-        requirements: "/ubuntu/ansible/bot/requirements.txt"
+        requirements: "/devops_pt/ansible/bot/requirements.txt"
     - name: Copy .env file
       template:
         src: .env
