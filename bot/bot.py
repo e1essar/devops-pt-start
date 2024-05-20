@@ -388,7 +388,7 @@ def get_repl_logs (update: Update, context):
     logger.info("get_repl_logs requested")
     user = os.getenv("DB_USER")
     password = os.getenv("DB_PASSWORD")
-    host = os.getenv("DB_HOST")
+    host = os.getenv("RM_HOST")
     port = os.getenv("DB_PORT")
     database = os.getenv("DB_DATABASE")
     try:
@@ -425,7 +425,7 @@ def get_repl_logs (update: Update, context):
 def get_email (update: Update, context):
     user = os.getenv("DB_USER")
     password = os.getenv("DB_PASSWORD")
-    host = os.getenv("DB_HOST")
+    host = os.getenv("RM_HOST")
     port = os.getenv("DB_PORT")
     database = os.getenv("DB_DATABASE")
     try:
@@ -458,7 +458,7 @@ def get_phone_numbers (update: Update, context):
     
     user = os.getenv("DB_USER")
     password = os.getenv("DB_PASSWORD")
-    host = os.getenv("DB_HOST")
+    host = os.getenv("RM_HOST")
     port = os.getenv("DB_PORT")
     database = os.getenv("DB_DATABASE")
 
@@ -498,7 +498,7 @@ def save_email (update: Update, context):
             try:
                 user = os.getenv("DB_USER")
                 password = os.getenv("DB_PASSWORD")
-                host = os.getenv("DB_HOST")
+                host = os.getenv("RM_HOST")
                 port = os.getenv("DB_PORT")
                 database = os.getenv("DB_DATABASE")
                 connection = psycopg2.connect(
@@ -539,7 +539,7 @@ def save_phone_number (update: Update, context):
             try:
                 user = os.getenv("DB_USER")
                 password = os.getenv("DB_PASSWORD")
-                host = os.getenv("DB_HOST")
+                host = os.getenv("RM_HOST")
                 port = os.getenv("DB_PORT")
                 database = os.getenv("DB_DATABASE")
                 connection = psycopg2.connect(
