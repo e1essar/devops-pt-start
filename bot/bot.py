@@ -518,7 +518,7 @@ def save_email (update: Update, context):
                 update.message.reply_text("Email-адреса успешно добавлены в базу данных.")
             except (Exception, psycopg2.Error) as error:
                 logging.error("Error in PostgreSQL: %s", error)
-                update.message.reply_text("Произошла ошибка при добавлении email-адресов в базу данных.")
+                update.message.reply_text(f"Произошла ошибка при добавлении email-адресов в базу данных.{error}")
             finally:
                 if connection is not None:
                     cursor.close()
