@@ -128,7 +128,7 @@
         state: present
     - name: Clone the repository
       git:
-        repo: https://github.com/e1essar/DevOps_PT.git
+        repo: https://github.com/e1essar/devops-pt-start.git
         dest: /devops_pt/ansible/bot
         version: main
         force: yes
