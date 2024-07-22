@@ -1,2 +1,2 @@
-# DevOps_PT_START
-Docker and Ansible playbook for PT_Start course
+# DevOps
+Docker and Ansible Playbook for PT_START course
